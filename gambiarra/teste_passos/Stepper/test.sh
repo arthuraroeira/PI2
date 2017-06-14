@@ -1,12 +1,12 @@
 gpio readall
 
-gpio mode 21 in
-gpio mode 22 in
-gpio mode 23 in
-gpio mode 24 in
+gpio mode 21 out
+gpio mode 22 out
+gpio mode 23 out
+gpio mode 24 out
 
-gpio mode 0 in
-gpio mode 2 in
+gpio mode 0 out
+gpio mode 2 out
 
 gpio write 0 1
 gpio write 2 1

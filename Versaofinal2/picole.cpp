@@ -12,6 +12,8 @@
 #include <sys/shm.h>
 #include <termios.h>
 #include "Stepper.h"
+#include <dirent.h>
+#include <fcntl.h>
 
 #define MOTOR1 0
 #define MOTOR2 2
@@ -28,6 +30,7 @@
 
 #define PROX 5
 
+
 int area;
 
 typedef struct memoria_compartilhada {
@@ -35,6 +38,27 @@ typedef struct memoria_compartilhada {
 } dado;
 
 dado *a1;
+
+float temperatura(char *devPath)
+{
+	char buf[256], tmpData[6];
+	int fd = open(devPath, O_RDONLY);
+	ssize_t numRead;
+	float tempC;
+
+	if(fd == -1)
+	{
+		perror ("Couldn't open the w1 device.");
+		return 1;   
+	}
+	if((numRead = read(fd, buf, 256)) > 0) 
+	{
+		strncpy(tmpData, strstr(buf, "t=") + 2, 5); 
+		tempC = strtof(tmpData, NULL);
+	}
+	close(fd);
+	return tempC / 1000;
+}
 
 void Alarme(int a)
 {
@@ -68,17 +92,14 @@ int getCM(int trigger, int echo)
 
 	//Get distance in cm
 	int distance = travelTime / 58;
-	delay(100);
+
 	return distance;
 }
 
 int main (int argc, char **argv)
 {
-	int fd, temp, sinal_gps, count, sucesso;
-	long lat = 0, lon = 0;
-	float temperatura;
-
-	//Erros
+	//Abrir serial UART
+	int fd;
 	if ((fd = serialOpen ("/dev/ttyAMA0", 9600)) < 0)
 		return 1 ;
 	//serialGetchar(fd)
@@ -111,6 +132,31 @@ int main (int argc, char **argv)
    		pinMode(echo[i], INPUT);
 	}
 
+	//Temperatura
+	float tempC;
+	DIR *dir;
+	struct dirent *dirent;
+	char dev[16], devPath[128], path[] = "/sys/bus/w1/devices";
+	dir = opendir (path);
+
+	if (dir != NULL)
+	{
+		while ((dirent = readdir (dir)))
+			if (dirent->d_type == DT_LNK && strstr(dirent->d_name, "28-") != NULL)
+			{
+				strcpy(dev, dirent->d_name);
+				printf("\nDevice: %s\n", dev);
+			}
+		(void) closedir (dir);
+	}
+	else
+	{
+		perror ("Couldn't open the w1 devices directory");
+		return 1;
+	}
+	sprintf(devPath, "%s/%s/w1_slave", path, dev);
+
+	//Setup inicial do sistema
 	system("amixer cset numid=3 1");//setar saida para o jack
 	system("amixer  sset PCM,0 65%");//volume
 	system("vcgencmd display_power 0"); //desligar display
@@ -122,6 +168,7 @@ int main (int argc, char **argv)
 	a1 = (dado *) shmat(area, 0, 0);
 	a1->musica = 1;
 
+
 	if(pid == 0)
 	{
 		while(1)
@@ -132,35 +179,32 @@ int main (int argc, char **argv)
 				system("aplay propaganda.wav");
 			else if(a1->musica == 2)
 				system("aplay alarme.wav");
+			delay(10);
 		}
 	}
 	else
 	{
 		while(1)
 		{
+			//Motor
 			for(int i = 0 ; i < 4 ; i++)
 				while(motor[i]>0)
 				{
-					if(girar_motor == 0)
-					{
-						digitalWrite(RELE_MOTOR, 1);
-						delay(100);
-						girar_motor = 1;
-					}
+					digitalWrite(RELE_MOTOR, 1);//Ligar o RELE
+					delay(100);//Esperar o RELE ligar
+					//Escolher qual motor vai girar
 					digitalWrite(MOTOR_SELECAO1, i%2);
 					digitalWrite(MOTOR_SELECAO2, i/2);
-					printf("Motor %d acionado\n", i);
-					myStepper.step(200);
+
+					printf("Motor %d acionado\n", i);//Mostrar no terminal qual motor foi acionado
+					myStepper.step(200); // Girar o motor 1 revolucao
 					motor[i]--;
 					delay(500);
 				}
-			if(girar_motor == 1)
-			{
-				delay(1000);
-				digitalWrite(RELE_MOTOR, 0);
-				girar_motor = 0;
-			}
-			//posicao
+
+			digitalWrite(RELE_MOTOR, 0);//Desligar RELE
+
+			//Posicao
 			for(int i = 0 ; i < 2 ; i++)
 			{
 				int posicao = getCM(trigger[i], echo[i]);
@@ -174,10 +218,9 @@ int main (int argc, char **argv)
 				printf("Distance: %dcm\n", posicao);
 			}
 
-	        //printf("Temperatura: %.2f\n", temperatura);
-
-	        //for(i = 0 ; i < 4 ; i++)
-	        //        printf("Posicao %d: %d\n", i+1, posicoes[i]);
+			//Temperatura
+			tempC = temperatura(devPath);
+	        printf("Temperatura: %.2f\n", tempC);
 
 			delay(1000);
 	        printf("\n----------------\n");
@@ -185,6 +228,8 @@ int main (int argc, char **argv)
 	}
 
 
+
         return 0 ;
 }
+
 

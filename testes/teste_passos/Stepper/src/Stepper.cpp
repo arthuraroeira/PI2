@@ -46,7 +46,7 @@ http://www.arduino.cc/en/Tutorial/Stepper
 
 #include <cmath>
 #include <wiringPi.h>
-//#include "Stepper.h"
+#include "Stepper.h"
 
 using namespace std;
 
@@ -56,7 +56,6 @@ using namespace std;
  */
 Stepper::Stepper(int number_of_steps, int motor_pin_1, int motor_pin_2)
 {
-  wiringPiSetup () ;
   this->step_number = 0;      // which step the motor is on
   this->speed = 0;        // the motor speed, in revolutions per minute
   this->direction = 0;      // motor direction
@@ -87,8 +86,6 @@ Stepper::Stepper(int number_of_steps, int motor_pin_1, int motor_pin_2)
 
 Stepper::Stepper(int number_of_steps, int motor_pin_1, int motor_pin_2, int motor_pin_3, int motor_pin_4)
 {
-  wiringPiSetup () ;
-
   this->step_number = 0;      // which step the motor is on
   this->speed = 0;        // the motor speed, in revolutions per minute
   this->direction = 0;      // motor direction
@@ -166,7 +163,6 @@ void Stepper::step(int steps_to_move)
  */
 void Stepper::stepMotor(int thisStep)
 {
-  wiringPiSetup () ;
   if (this->pin_count == 2) {
     switch (thisStep) {
       case 0: /* 01 */

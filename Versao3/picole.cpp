@@ -29,14 +29,6 @@
 #include <fcntl.h>
 
 //Pinos dos perifericos
-#define MOTOR1 14
-#define MOTOR2 21
-#define MOTOR3 25
-#define MOTOR4 24
-#define MOTOR_SELECAO1 22
-#define MOTOR_SELECAO2 23
-#define RELE_MOTOR 13
-
 #define PINTRIG1 3
 #define PINECHO1 12
 #define PINTRIG2 0
@@ -83,16 +75,6 @@ int main(int argc, char **argv)
 	//Sinais
 	signal(SIGINT, Sinal_Sair);
 	signal(SIGALRM, Sinal_Alarme);
-
-	//Dados do motor
-	int motor[4];
-	for(int i = 0 ; i < 4 ; i++)
-		motor[i] = atoi(argv[i+1]);
-	Stepper myStepper(200, MOTOR1, MOTOR2, MOTOR3, MOTOR4);
-	myStepper.setSpeed(60);
-	pinMode(MOTOR_SELECAO1, OUTPUT); // Pinos 3 e 4 configurados como saida
-	pinMode(MOTOR_SELECAO2, OUTPUT);
-	pinMode(RELE_MOTOR, OUTPUT);
 
 	//Posicao
 	int trigger[3] = {PINTRIG1, PINTRIG2};
@@ -164,25 +146,6 @@ int main(int argc, char **argv)
 	{
 		while(1)
 		{
-			//Motor
-			for(int i = 0 ; i < 4 ; i++)
-			{
-				while(motor[i]>0)
-				{
-					digitalWrite(RELE_MOTOR, 1);//Ligar o RELE
-					delay(100);//Esperar o RELE ligar
-					//Escolher qual motor vai girar
-					digitalWrite(MOTOR_SELECAO1, i%2);
-					digitalWrite(MOTOR_SELECAO2, i/2);
-
-					printf("Motor %d acionado\n", i);//Mostrar no terminal qual motor foi acionado
-					myStepper.step(200); // Girar o motor 1 revolucao
-					motor[i]--;
-					delay(500);
-				}
-			}
-			digitalWrite(RELE_MOTOR, 0);//Desligar RELE
-
 			//Posicao
 			int posicao[2];
 			for(int i = 0 ; i < 2 ; i++)

@@ -29,22 +29,22 @@
 #include <fcntl.h>
 
 //Pinos dos perifericos
-#define MOTOR1 0
-#define MOTOR2 2
-#define MOTOR3 3
-#define MOTOR4 12
-#define MOTOR_SELECAO1 8
-#define MOTOR_SELECAO2 9
-#define RELE_MOTOR 22
+#define MOTOR1 14
+#define MOTOR2 21
+#define MOTOR3 25
+#define MOTOR4 24
+#define MOTOR_SELECAO1 22
+#define MOTOR_SELECAO2 23
+#define RELE_MOTOR 13
 
-#define PINTRIG1 13
-#define PINECHO1 14
-#define PINTRIG2 30
-#define PINECHO2 21
+#define PINTRIG1 3
+#define PINECHO1 12
+#define PINTRIG2 0
+#define PINECHO2 2
 
-#define RELE_COMPRESSOR 23
+#define RELE_COMPRESSOR 8
 
-#define CONTATO 24
+#define CONTATO 9
 
 //Intervalos definidos
 #define TEMPERATURA_ACIONAMENTO_LIGAR  2

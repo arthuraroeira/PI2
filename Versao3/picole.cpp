@@ -77,8 +77,8 @@ int main(int argc, char **argv)
 	signal(SIGALRM, Sinal_Alarme);
 
 	//Posicao
-	int trigger[3] = {PINTRIG1, PINTRIG2};
-	int echo[3] = {PINECHO1, PINECHO2};
+	int trigger[2] = {PINTRIG1, PINTRIG2};
+	int echo[2] = {PINECHO1, PINECHO2};
 	for(int i = 0 ; i < 2 ; i++)
 	{
 		pinMode(trigger[i], OUTPUT);

@@ -119,11 +119,10 @@ int main(int argc, char **argv)
 	int volume, mudou_volume = 0;
 	system("amixer cset numid=3 1");//setar saida para o jack
 	system("vcgencmd display_power 0"); //desligar display
-	system("amixer sset PCM,0 70%");
+	system("amixer sset PCM,0 75%");
 
 	//Criar 1 processo novo
 	area = shmget(IPC_PRIVATE, sizeof(dado), IPC_CREAT | 0644);
-	delay(30);
 	pid_t pid = fork();
 	a1 = (dado *) shmat(area, 0, 0);
 	a1->musica = 1;
@@ -159,7 +158,7 @@ int main(int argc, char **argv)
 				a1->musica = 0;
 				system("sudo pkill aplay");
 				system("vcgencmd display_power 1");
-				alarm(30);
+				alarm(90);
 			}
 			//Temperatura
 			tempC = Sensor_Temperatura(devPath);
@@ -178,7 +177,6 @@ int main(int argc, char **argv)
 				a1->Alarme_tocando = 1;
 				alarm(1);
 			}
-				
 
 			//Volume
 			if(mudou_volume == 1)

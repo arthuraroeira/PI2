@@ -144,7 +144,7 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		for(int k = 0 ; 1 ; k = (k + 1) % 30)
+		for(int k = 0 ; 1 ; k = (k + 1) % 5)
 		{
 			//Posicao
 			int posicao[2];
@@ -161,7 +161,6 @@ int main(int argc, char **argv)
 				system("vcgencmd display_power 1");
 				alarm(30);
 			}
-
 			//Temperatura
 			tempC = Sensor_Temperatura(devPath);
 			if(k == 0)
@@ -192,7 +191,6 @@ int main(int argc, char **argv)
 				mudou_volume = 0;
 			}
 
-			delay(100);
 			if(k == 0 )
 				printf("\n----------------\n");
 		}

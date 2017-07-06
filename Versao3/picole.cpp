@@ -11,6 +11,12 @@
 		>Sensor de Temperatura - http://bradsrpi.blogspot.com.br/2013/12/c-program-to-read-temperature-from-1.html
 */
 
+#include <fstream>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <chrono>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <bits/stdc++.h>
@@ -163,7 +169,20 @@ int main(int argc, char **argv)
 
 			//Temperatura
 			tempC = Sensor_Temperatura(devPath);
-			printf("Temperatura: %.2fC\n", tempC);
+			std::fstream fs;
+			using namespace std::chrono;
+
+			system_clock::time_point tp = system_clock::now();
+			system_clock::duration dtn = tp.time_since_epoch();
+
+			std::stringstream ss;
+			ss.str (std::to_string(dtn.count() * system_clock::period::num / system_clock::period::den));
+			
+			fs.open (ss.str(), std::fstream::out);
+			
+			fs << tempC;
+			
+			fs.close();
 			if(tempC < TEMPERATURA_ACIONAMENTO_DESLIGAR)
 				digitalWrite(RELE_COMPRESSOR, 0);
 			if(tempC > TEMPERATURA_ACIONAMENTO_LIGAR)

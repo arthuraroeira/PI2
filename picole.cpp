@@ -15,7 +15,6 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include <chrono>
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,7 +34,6 @@
 #include <fcntl.h>
 
 using namespace std;
-using namespace std::chrono;
 
 //Pinos dos perifericos
 #define PINTRIG1 3
@@ -69,6 +67,7 @@ int   Sensor_Presenca(int trigger, int echo);
 
 int main(int argc, char **argv)
 {
+	int count = 0;
 	//Abrir serial UART
 	int fd;
 	if ((fd = serialOpen ("/dev/ttyAMA0", 9600)) < 0)

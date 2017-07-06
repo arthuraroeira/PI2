@@ -34,6 +34,9 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+using namespace std;
+using namespace std::chrono;
+
 //Pinos dos perifericos
 #define PINTRIG1 3
 #define PINECHO1 12

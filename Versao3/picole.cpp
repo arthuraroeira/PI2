@@ -36,12 +36,12 @@
 
 #define RELE_COMPRESSOR 8
 
-#define CONTATO 9
+#define CONTATO 1
 
 //Intervalos definidos
-#define TEMPERATURA_ACIONAMENTO_LIGAR  2
-#define TEMPERATURA_ACIONAMENTO_DESLIGAR -2
-#define PROX 5
+#define TEMPERATURA_ACIONAMENTO_LIGAR 10
+#define TEMPERATURA_ACIONAMENTO_DESLIGAR 6
+#define PROX 100
 
 int area;
 
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 	int volume, mudou_volume = 0;
 	system("amixer cset numid=3 1");//setar saida para o jack
 	system("vcgencmd display_power 0"); //desligar display
-	system("amixer  sset PCM,0 65%");
+	system("amixer sset PCM,0 70%");
 
 	//Criar 1 processo novo
 	area = shmget(IPC_PRIVATE, sizeof(dado), IPC_CREAT | 0644);
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 		while(1)
 		{
 			if(a1->musica == 0)
-				system("aplay compra.wav");
+				system("omxplayer --vol -1500 -o local --loop --aspect-mode fill ~/pi2/videos/20170623_000133.mp4");
 			else if(a1->musica == 1)
 				system("aplay propaganda.wav");
 			else if(a1->musica == 2)
@@ -153,7 +153,7 @@ int main(int argc, char **argv)
 				posicao[i] = Sensor_Presenca(trigger[i], echo[i]);
 				printf("Distance: %dcm\n", posicao[i]);
 			}
-			if(posicao[0] <= PROX && posicao[0] > 0 && posicao[1] <= PROX && posicao[1] > 0 && a1->musica == 1 && a1->Alarme_tocando == 0)
+			if((posicao[0] <= PROX && posicao[0] > 0 && posicao[1] <= PROX && posicao[1] > 0) && a1->musica == 1 && a1->Alarme_tocando == 0)
 			{
 				a1->musica = 0;
 				system("sudo pkill aplay");
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 				digitalWrite(RELE_COMPRESSOR, 1);
 
 			//Contato
-			if(digitalRead(CONTATO) && a1->Alarme_tocando == 0)
+			if(!digitalRead(CONTATO) && a1->Alarme_tocando == 0)
 			{
 				a1->musica = 2;
 				system("sudo pkill aplay");
@@ -211,6 +211,7 @@ void Sinal_Alarme(int a)
 		a1->musica = 1;
 		system("vcgencmd display_power 0");
 		system("sudo pkill aplay");
+		system("sudo pkill omxplayer");
 	}
 }
 
@@ -219,6 +220,7 @@ void Sinal_Sair(int a)
 	printf("Saindo...\n");
 	shmctl(area, IPC_RMID, 0);
 	system("sudo pkill a.out");
+	system("sudo pkill omxplayer");
 	exit(1);
 }
 

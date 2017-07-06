@@ -134,24 +134,25 @@ int main(int argc, char **argv)
 		while(1)
 		{
 			if(a1->musica == 0)
-				system("omxplayer --vol -1500 -o local --loop --aspect-mode fill ~/pi2/videos/20170623_000133.mp4");
+				system("omxplayer --vol -1500 -o local --loop --aspect-mode stretch ~/pi2/videos/20170623_000133.mp4");
 			else if(a1->musica == 1)
 				system("aplay propaganda.wav");
 			else if(a1->musica == 2)
-				system("aplay alarme.wav");
+				system("amixer sset PCM,0 90% && aplay alarme.wav");
 			delay(10);
 		}
 	}
 	else
 	{
-		while(1)
+		for(int k = 0 ; 1 ; k = (k + 1) % 30)
 		{
 			//Posicao
 			int posicao[2];
 			for(int i = 0 ; i < 2 ; i++)
 			{
 				posicao[i] = Sensor_Presenca(trigger[i], echo[i]);
-				printf("Distance: %dcm\n", posicao[i]);
+				if(k == 0)
+					printf("Distance: %dcm\n", posicao[i]);
 			}
 			if((posicao[0] <= PROX && posicao[0] > 0 && posicao[1] <= PROX && posicao[1] > 0) && a1->musica == 1 && a1->Alarme_tocando == 0)
 			{
@@ -163,7 +164,8 @@ int main(int argc, char **argv)
 
 			//Temperatura
 			tempC = Sensor_Temperatura(devPath);
-			printf("Temperatura: %.2fC\n", tempC);
+			if(k == 0)
+				printf("Temperatura: %.2fC\n", tempC);
 			if(tempC < TEMPERATURA_ACIONAMENTO_DESLIGAR)
 				digitalWrite(RELE_COMPRESSOR, 0);
 			if(tempC > TEMPERATURA_ACIONAMENTO_LIGAR)
@@ -190,8 +192,9 @@ int main(int argc, char **argv)
 				mudou_volume = 0;
 			}
 
-			delay(1000);
-			printf("\n----------------\n");
+			delay(100);
+			if(k == 0 )
+				printf("\n----------------\n");
 		}
 	}
 
@@ -220,6 +223,7 @@ void Sinal_Sair(int a)
 	printf("Saindo...\n");
 	shmctl(area, IPC_RMID, 0);
 	system("sudo pkill a.out");
+	digitalWrite(8,0);
 	system("sudo pkill omxplayer");
 	exit(1);
 }

@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 	int volume, mudou_volume = 0;
 	system("amixer cset numid=3 1");//setar saida para o jack
 	system("vcgencmd display_power 0"); //desligar display
-	system("amixer sset PCM,0 75%");
+	system("amixer sset PCM,0 85%");
 
 	//Criar 1 processo novo
 	area = shmget(IPC_PRIVATE, sizeof(dado), IPC_CREAT | 0644);
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 		while(1)
 		{
 			if(a1->musica == 0)
-				system("omxplayer --vol -1500 -o local --loop --aspect-mode stretch ~/pi2/videos/20170623_000133.mp4");
+				system("omxplayer --vol -1500 -o local --loop --aspect-mode stretch /home/pi/pi2/videos/20170623_000133.mp4");
 			else if(a1->musica == 1)
 				system("aplay propaganda.wav");
 			else if(a1->musica == 2)
@@ -174,6 +174,7 @@ int main(int argc, char **argv)
 			{
 				a1->musica = 2;
 				system("sudo pkill aplay");
+				system("sudo pkill omxplayer");
 				a1->Alarme_tocando = 1;
 				alarm(1);
 			}

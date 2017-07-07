@@ -39,8 +39,8 @@
 #define CONTATO 1
 
 //Intervalos definidos
-#define TEMPERATURA_ACIONAMENTO_LIGAR 10
-#define TEMPERATURA_ACIONAMENTO_DESLIGAR 6
+#define TEMPERATURA_ACIONAMENTO_LIGAR 5
+#define TEMPERATURA_ACIONAMENTO_DESLIGAR 0
 #define PROX 100
 
 int area;
@@ -57,6 +57,7 @@ void  Sinal_Alarme(int a);
 void  Sinal_Sair(int a);
 float Sensor_Temperatura(char *devPath);
 int   Sensor_Presenca(int trigger, int echo);
+std::fstream fs;
 
 int main(int argc, char **argv)
 {
@@ -96,6 +97,7 @@ int main(int argc, char **argv)
 	char dev[16], devPath[128], path[] = "/sys/bus/w1/devices"; 
 	dir = opendir (path);
 
+
 	if (dir != NULL)
 	{
 		while ((dirent = readdir (dir)))
@@ -113,22 +115,24 @@ int main(int argc, char **argv)
 	}
 	sprintf(devPath, "%s/%s/w1_slave", path, dev);
 	pinMode(RELE_COMPRESSOR, OUTPUT);
-	digitalWrite(RELE_COMPRESSOR, 1);
+		digitalWrite(RELE_COMPRESSOR, 1);
 
 	//Setup inicial do sistema
 	int volume, mudou_volume = 0;
 	system("amixer cset numid=3 1");//setar saida para o jack
 	system("vcgencmd display_power 0"); //desligar display
-	system("amixer sset PCM,0 85%");
+	system("amixer sset PCM,0 90%");
 
 	//Criar 1 processo novo
 	area = shmget(IPC_PRIVATE, sizeof(dado), IPC_CREAT | 0644);
 	pid_t pid = fork();
+	pid_t pid2 = fork();
 	a1 = (dado *) shmat(area, 0, 0);
 	a1->musica = 1;
 	a1->Alarme_tocando = 0;
+	fflush(stdin);
 
-	if(pid == 0)
+	if(pid == 0 && pid2 != 0)
 	{
 		while(1)
 		{
@@ -141,33 +145,41 @@ int main(int argc, char **argv)
 			delay(10);
 		}
 	}
-	else
+	else if(pid2 == 0 && pid != 0)
 	{
-		for(int k = 0 ; 1 ; k = (k + 1) % 5)
+		while(1)
 		{
-			//Posicao
+			//Temperatura
+			tempC = Sensor_Temperatura(devPath);
+			tempC = Sensor_Temperatura(devPath);
+			fs.open ("temperature.txt", std::fstream::out);
+			fs << tempC << std::endl;
+			fs.close();
+			printf("Temperatura: %.2fC\n", tempC);
+			if(tempC < TEMPERATURA_ACIONAMENTO_DESLIGAR)
+				digitalWrite(RELE_COMPRESSOR, 0);
+			if(tempC > TEMPERATURA_ACIONAMENTO_LIGAR)
+				digitalWrite(RELE_COMPRESSOR, 1);
+		}
+
+	}
+	else if(pid != 0 && pid2 != 0)
+	{
+		while(1)
+		{
+//			//Posicao
 			int posicao[2];
 			for(int i = 0 ; i < 2 ; i++)
 			{
 				posicao[i] = Sensor_Presenca(trigger[i], echo[i]);
-				if(k == 0)
-					printf("Distance: %dcm\n", posicao[i]);
 			}
 			if((posicao[0] <= PROX && posicao[0] > 0 && posicao[1] <= PROX && posicao[1] > 0) && a1->musica == 1 && a1->Alarme_tocando == 0)
 			{
 				a1->musica = 0;
 				system("sudo pkill aplay");
 				system("vcgencmd display_power 1");
-				alarm(90);
+				alarm(45);
 			}
-			//Temperatura
-			tempC = Sensor_Temperatura(devPath);
-			if(k == 0)
-				printf("Temperatura: %.2fC\n", tempC);
-			if(tempC < TEMPERATURA_ACIONAMENTO_DESLIGAR)
-				digitalWrite(RELE_COMPRESSOR, 0);
-			if(tempC > TEMPERATURA_ACIONAMENTO_LIGAR)
-				digitalWrite(RELE_COMPRESSOR, 1);
 
 			//Contato
 			if(!digitalRead(CONTATO) && a1->Alarme_tocando == 0)
@@ -190,8 +202,6 @@ int main(int argc, char **argv)
 				mudou_volume = 0;
 			}
 
-			if(k == 0 )
-				printf("\n----------------\n");
 		}
 	}
 
@@ -220,7 +230,7 @@ void Sinal_Sair(int a)
 	printf("Saindo...\n");
 	shmctl(area, IPC_RMID, 0);
 	system("sudo pkill a.out");
-	digitalWrite(8,0);
+//	digitalWrite(8,0);
 	system("sudo pkill omxplayer");
 	exit(1);
 }
